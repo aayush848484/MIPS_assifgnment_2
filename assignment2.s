@@ -24,10 +24,14 @@
 	Loop:
 		add $t1, $s0, $s1
 		lb $t2, 0($t1)
-		beq, $t2, 10, Exit 
+		# beq, $t2, 10, Exit
+		beq $t2, 10, LastSubString
 		bne $t2, 44, Next
 		j Transition 
-		
+	
+	LastSubString:
+		li $a3, 1
+		j Transition
 	Next:
 	addi $s1, $s1, 1 
 	j Loop
@@ -93,6 +97,8 @@
 			li $v0, 4
 			syscall	
 			
+			beq $a3, 1, Exit 
+			
 			la $a0, comma
 			li $v0, 4
 			syscall
@@ -144,6 +150,8 @@
 			li $v0, 4
 			syscall	
 			
+			beq $a3, 1, Exit
+			
 			la $a0, comma
 			li $v0, 4
 			syscall
@@ -167,6 +175,8 @@
 		li $v0, 1
 		add $a0, $t7, $zero
 		syscall
+		
+		beq $a3, 1, Exit
 		
 		la $a0, comma
 		li $v0, 4
