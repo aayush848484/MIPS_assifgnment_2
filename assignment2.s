@@ -9,6 +9,8 @@
 .data 
 	string_space: .space 1001
 	comma: .asciiz ","
+	undefined: .asciiz "NaN"
+	longstring: .asciiz "too large"
 
 .text
 	main:
@@ -35,9 +37,10 @@
 	add $a1, $s1, $zero
 	add $a2, $s0, $zero
 	jal subprogram2
-	addi $s1, $s1, 1 # INREASE THE END BECAUSE CURRENTLY POINTING AT THE COMMA CHARACTER.
-	add $s2, $s1, $zero # COPY THE END TO THE START FOR THE NEW SUBSTRING TO BE READ.
-	j Loop
+	ErrorDestination:
+		addi $s1, $s1, 1 # INREASE THE END BECAUSE CURRENTLY POINTING AT THE COMMA CHARACTER.
+		add $s2, $s1, $zero # COPY THE END TO THE START FOR THE NEW SUBSTRING TO BE READ.
+		j Loop
 
 
 	subprogram2:
@@ -61,6 +64,7 @@
 		add $s6 , $a1, $zero
 		add $s7 , $a2, $zero
 		sub $t9, $s6, $t0 # REGISTER $T9 COUNTS THE LENGTH OF THE SUB-STRING TO BE READ.
+		bgt $t9, 8, LongString
 		li $t6, 4
 		mult $t9, $t6
 		mflo $t5 # REGISTER $T5 CALCULATES THE NUMBER OF SHIFTS TO BE MADE FOR THE FIRST CHARACTER IN THE SUB-STRNG.
@@ -83,6 +87,16 @@
 		lw $ra, ($sp) # RELOAD THE RETURN ADDRESS FROM THE STACK.
 		addi $sp, $sp, 4
 		jr $ra
+		
+		LongString:
+			la $a0, longstring
+			li $v0, 4
+			syscall	
+			
+			la $a0, comma
+			li $v0, 4
+			syscall
+			j ErrorDestination
 	
 
 	subprogram1:
@@ -99,14 +113,41 @@
 		# 
 		# Called by sub-program-2
 		# Calls: None
-		
+		   
 		add $s3, $a0, $zero
 		add $s4, $a1, $zero
-		addi, $s4, $s4, -4 
-		addi $s3, $s3, -87
-		sllv $s5, $s3, $s4
-		add $v0, $s5, $zero
-		jr $ra
+		addi, $s4, $s4, -4 # INCLUDES THE SHIFT FOR THE COMMA CHARACTER AS WELL.
+		
+		bgt $s3, 64, Capital
+		bgt $s3, 57, Error
+		blt $s3, 48, Error
+		
+		addi $s3, $s3, -48
+		Final:
+			sllv $s5, $s3, $s4
+			add $v0, $s5, $zero
+			jr $ra
+		
+		Capital:
+			bgt $s3, 70, Small 
+			addi $s3, $s3, -55
+			j Final
+		
+		Small:
+			blt $s3, 97, Error
+			bgt $s3, 102, Error
+			addi $s3, $s3, -87
+			j Final
+			
+		Error:
+			la $a0, undefined
+			li $v0, 4
+			syscall	
+			
+			la $a0, comma
+			li $v0, 4
+			syscall
+			j ErrorDestination
 
 	subprogram3:
 		###################################################################################
@@ -125,6 +166,10 @@
 		addi $sp, $sp, 4
 		li $v0, 1
 		add $a0, $t7, $zero
+		syscall
+		
+		la $a0, comma
+		li $v0, 4
 		syscall
 		jr $ra
 
