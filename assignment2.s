@@ -37,14 +37,40 @@
 	j Loop
 	# IF A COMMA, SEND THE START AND THE END INDEX OF THE SUBSTRING TO THE SUBPROGRAM2 TO CONVERT IT INTO EQUIVALENT DECIMAL STRING.
 	Transition:
-	add $a0, $s2, $zero # SENDING PARAMETERS TO THE SUBPROGRAM 2 USING THE ARGUMENT REGISTERS.
-	add $a1, $s1, $zero
-	add $a2, $s0, $zero
-	jal subprogram2
+		add $t0, $s1, $s0
+		Loop1:
+			add $t0, $t0, -1
+			lb $t3, ($t0)
+			bne $t3, 32, EndFound
+			# bne $t3, 9, EndFound
+			beq $t3, 44, Error
+			j Loop1
+		
+		EndFound:
+		add $t4, $s2, $s0
+		Loop3:
+			lb $t3, ($t4)
+			bne $t3, 32, Done
+			# bne $t3, 9, Done
+			beq $t3, 44, Error
+			add $t4, $t4, 1
+			j Loop3
+			
+	Done:
+		sub $t0, $t0, $s0
+		sub $t4, $t4, $s0 
+		addi $t0, $t0, 1
+		add $a0, $t4, $zero # SENDING PARAMETERS TO THE SUBPROGRAM 2 USING THE ARGUMENT REGISTERS.
+		add $a1, $t0, $zero
+		add $a2, $s0, $zero
+		jal subprogram2
 	ErrorDestination:
 		addi $s1, $s1, 1 # INREASE THE END BECAUSE CURRENTLY POINTING AT THE COMMA CHARACTER.
 		add $s2, $s1, $zero # COPY THE END TO THE START FOR THE NEW SUBSTRING TO BE READ.
 		j Loop
+	
+	EmptyString:
+		
 
 
 	subprogram2:
