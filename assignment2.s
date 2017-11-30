@@ -94,7 +94,6 @@
 		add $s6 , $a1, $zero
 		add $s7 , $a2, $zero
 		sub $t9, $s6, $t0 # REGISTER $T9 COUNTS THE LENGTH OF THE SUB-STRING TO BE READ.
-		bgt $t9, 8, LongString
 		li $t6, 4
 		mult $t9, $t6
 		mflo $t5 # REGISTER $T5 CALCULATES THE NUMBER OF SHIFTS TO BE MADE FOR THE FIRST CHARACTER IN THE SUB-STRNG.
@@ -110,7 +109,8 @@
 			addi $t0, $t0, 1 # INCREASE THE COUNTER BY 1 AFTER EACH LOOP.
 			addi $t5, $t5, -4 # REDUCE THE NUMBER OF SHIFTS TO BE MADE AFTER EACH ITERATION.
 			bne $t0, $s6, Loop2
-
+	
+		bgt $t9, 8, LongString
 		addi $sp, $sp, -4 # USING STACK TO SEND THE CORRESPONDING HEXADECIMAL VALUE TO THE SUBPROGRAM 3.
 		sw $t7, ($sp)
 		jal subprogram3
@@ -153,7 +153,6 @@
 		bgt $s3, 64, Capital
 		bgt $s3, 57, Error
 		blt $s3, 48, Error
-		
 		addi $s3, $s3, -48
 		Final:
 			sllv $s5, $s3, $s4
@@ -195,13 +194,32 @@
 		# 
 		# Called by sub-program-2
 		# Calls: None
-
+		
+		
 		lw $t7, ($sp)
 		addi $sp, $sp, 4
+		
+		blt $t7, 10, hawa
+		next:
+		li $k0, 10			# loading the value 10 into $t0
+		divu $t7, $k0
+		mflo $k0			# loading the quotiend into $s0
+		la $a0, 0($k0)
 		li $v0, 1
-		add $a0, $t7, $zero
+		syscall
+		mfhi $k0
+		la $a0, 0($k0)
+		li $v0, 1
+		syscall
+		j CommaPrint
+
+		hawa:
+		blt $t7, 0, next
+		add $a0, $t7, 0
+		li $v0, 1
 		syscall
 		
+	CommaPrint:
 		beq $a3, 1, Exit
 		
 		la $a0, comma
@@ -212,4 +230,6 @@
 	Exit:
 		li $v0, 10
 		syscall
+		
+		
 	
